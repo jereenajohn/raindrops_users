@@ -76,7 +76,11 @@ flutter:
     - lib/assets/im1.jpg
     - lib/assets/im2.jpg
     - lib/assets/im4.jpg
-    - lib/assets/im5.jpg
+    - lib/assets/fruits.jpg
+    - lib/assets/fruits1.png
+    - lib/assets/fruits3.png
+    - lib/assets/fruits2.jpg
+
    
 
 

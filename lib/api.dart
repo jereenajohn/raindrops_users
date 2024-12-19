@@ -1,1 +1,1 @@
-var url="https://hiking-ist-mountains-launches.trycloudflare.com";
+var url="https://allocation-however-neon-vital.trycloudflare.com";

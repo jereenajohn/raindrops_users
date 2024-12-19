@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:raindrops/api.dart';
 import 'package:raindrops/homepage.dart';
+import 'package:raindrops/signinpage.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -41,7 +42,7 @@ class _RegisterationPageState extends State<RegisterationPage> {
     BuildContext scaffoldContext,
   ) async {
     try {
-      var response = await http.post(Uri.parse("$url/api/user-registration/"),
+      var response = await http.post(Uri.parse("$url/api/user-registration"),
           headers: {"Content-Type": "application/json"},
           body: jsonEncode({
             "name": name,
@@ -301,8 +302,8 @@ class _RegisterationPageState extends State<RegisterationPage> {
                   Text('Already a member?'),
                   TextButton(
                     onPressed: () {
-                      // Navigator.push(context,
-                      //     MaterialPageRoute(builder: (context) => LoginPage()));
+                      Navigator.push(context,
+                          MaterialPageRoute(builder: (context) => SignIn_Page()));
                     },
                     child: Text(
                       'Sign In',

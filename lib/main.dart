@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:raindrops/firstpage.dart';
 import 'package:raindrops/homepage.dart';
+import 'package:raindrops/registerationpage.dart';
+import 'package:raindrops/signinpage.dart';
 
 void main()
 {

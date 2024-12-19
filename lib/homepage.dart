@@ -1,6 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:http/http.dart' as http;
+import 'package:raindrops/api.dart';
+import 'package:raindrops/product_big_view.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -10,237 +14,312 @@ class HomePage extends StatefulWidget {
 class HomePageState extends State<HomePage> {
   String? _userLocation;
   int _selectedIndex = 0;
+  late String imageUrl;
+  List<Map<String, dynamic>> categories = [];
+  List<Map<String, dynamic>> products = [];
 
   @override
   void initState() {
     super.initState();
     _getUserLocation();
+    fetchCategories();
+    fetchproducts();
   }
 
+  Future<void> fetchCategories() async {
+    try {
+      final response = await http.get(Uri.parse('$url/api/category'));
+      if (response.statusCode == 200) {
+        final parsed = jsonDecode(response.body);
+        final List<dynamic> categoryData = parsed['data'];
+        setState(() {
+          categories = categoryData
+              .map((category) => {
+                    'id': category['_id'],
+                    'name': category['name'],
+                    'image': "$url/${category['image']}",
+                    'slug': category['slug'],
+                  })
+              .toList();
+        });
+      }
+    } catch (error) {
+      print("Error fetching categories: $error");
+    }
+  }
 
-  // Future<void> fetchCategories() async {
-  //   try {
-  //     final response = await http.get(Uri.parse(categoryUrl));
-
-  //     if (response.statusCode == 200) {
-  //       final parsed = jsonDecode(response.body);
-  //       final List<dynamic> categorysData = parsed['data'];
-  //       List<Map<String, dynamic>> categoryList = [];
-
-  //       for (var categoryData in categorysData) {
-  //         String imageUrl = "${categoryData['image']}";
-  //         categoryList.add({
-  //           'id': categoryData['id'],
-  //           'name': categoryData['name'],
-  //           'image': imageUrl,
-  //           'slug': categoryData['slug']
-  //         });
-  //       }
-
-  //       setState(() {
-  //         categories = categoryList;
-  //       });
-  //     } else {
-  //       throw Exception('Failed to load categories');
-  //     }
-  //   } catch (error) {}
-  // }
+  Future<void> fetchproducts() async {
+    try {
+      final response = await http.get(Uri.parse('$url/api/product'));
+      if (response.statusCode == 200) {
+        final parsed = jsonDecode(response.body);
+        final List<dynamic> productData = parsed['data'];
+        setState(() {
+          products = productData
+              .map((product) => {
+                    'id': product['_id'],
+                    'name': product['name'],
+                    'image': "$url/${product['image']}",
+                    'slug': product['slug'],
+                    'price': product['price'],
+                    'saleprice': product['sale_price'],
+                    'discount': product['discount'],
+                  })
+              .toList();
+        });
+      }
+    } catch (error) {
+      print("Error fetching products: $error");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          Container(
-            height: 180,
-            padding: EdgeInsets.all(16.0),
-            decoration: BoxDecoration(
-              color: Colors.green,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(30.0),
-                bottomRight: Radius.circular(30.0),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Top Container
+            Container(
+              height: 180,
+              padding: EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                color: Colors.green,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(30.0),
+                  bottomRight: Radius.circular(30.0),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 25),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Rain Drops',
+                          style: TextStyle(
+                            fontSize: 24,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            Icon(Icons.location_on,
+                                color: Colors.white, size: 15),
+                            SizedBox(width: 8),
+                            Text(
+                              _userLocation ?? 'Enable Location',
+                              style:
+                                  TextStyle(fontSize: 12, color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 16.0),
+                  TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search...',
+                      prefixIcon: Icon(Icons.search),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30.0),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 25),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Rain Drops',
-                        style: TextStyle(
-                          fontSize: 24,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+
+            // Categories Grid
+            SizedBox(height: 10.0),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Shop Popular Categories',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                  TextButton(
+                    onPressed: () {},
+                    child: Text(
+                      'View all',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
                       ),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.location_on,
-                            color: Colors.white,
-                            size: 15,
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            _userLocation ?? 'Enable Location',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.white,
-                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 4,
+              ),
+              itemCount: categories.length,
+              itemBuilder: (context, index) {
+                return Column(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(28.0),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.shade300,
+                            blurRadius: 4.0,
+                            spreadRadius: 1.0,
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 16.0),
-                TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Search...',
-                    prefixIcon: Icon(Icons.search),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30.0),
-                      borderSide: BorderSide.none,
+                      child: ClipRRect(
+                        borderRadius:
+                            BorderRadius.circular(25.0), // Rounded corners
+                        child: Image.network(
+                          categories[index]['image'],
+                          height: 60.0,
+                          width: 60.0,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Icon(
+                              Icons.broken_image,
+                              size: 40.0,
+                              color: Colors.grey,
+                            );
+                          },
+                        ),
+                      ),
                     ),
-                    contentPadding:
-                        EdgeInsets.symmetric(vertical: 0, horizontal: 16.0),
-                  ),
-                ),
-              ],
+                    SizedBox(height: 4.0),
+                    Text(
+                      categories[index]['name'],
+                      textAlign: TextAlign.center,
+                      style:
+                          TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                );
+              },
             ),
-          ),
-        ],
-      ),
-      
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        backgroundColor: Colors.white,
-        selectedItemColor: Colors.green,
-        unselectedItemColor: const Color.fromARGB(255, 45, 44, 44),
-        showSelectedLabels: true,
-        showUnselectedLabels: false,
-        type: BottomNavigationBarType.fixed,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_bag_outlined),
-            activeIcon: Icon(Icons.shopping_bag),
-            label: 'Cart',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_border),
-            activeIcon: Icon(Icons.favorite),
-            label: 'Favorites',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
+
+            // Horizontal Products Section
+            SizedBox(height: 16.0),
+            // Products Grid (Horizontal Scroll)
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Popular Products',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              height: 250, // Set a fixed height for horizontal scroll
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: products.length,
+                itemBuilder: (context, index) {
+                  return GestureDetector(
+                    onTap: () {
+                                                  Navigator.push(context, MaterialPageRoute(builder: (context)=>Product_Big_view(id:products[index]['slug'])));
+
+                    },
+                    child: Container(
+                      width: 180, // Set card width
+                      margin: EdgeInsets.only(
+                          right: 12.0), // Add spacing between items
+                      child: Card(
+                        elevation: 3,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(10)),
+                                child: Image.network(
+                                  products[index]['image'] ?? '',
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      color: Colors.grey[200],
+                                      width: double.infinity,
+                                      child: Icon(
+                                        Icons.broken_image,
+                                        size: 50,
+                                        color: Colors.grey[500],
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    products[index]['name'] ?? 'No Name',
+                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    '\$${products[index]['saleprice'] ?? 'N/A'}',
+                                    style: TextStyle(
+                                      color: Colors.green,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
-  }
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
   }
 
   void _getUserLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      bool userResponse = await _showLocationDialog();
-      if (!userResponse) {
-        return;
-      }
-      serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Location services are still disabled.')),
-        );
-        return;
-      }
-    }
-
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Location permissions are denied')),
-        );
-        return;
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Location permissions are permanently denied, we cannot request permissions.',
-          ),
-        ),
-      );
-      return;
-    }
-
-    Position position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
-
-    List<Placemark> placemarks = await placemarkFromCoordinates(
-      position.latitude,
-      position.longitude,
-    );
-
-    String address = placemarks.isNotEmpty
-        ? '${placemarks.first.subLocality}'
-        : 'Unknown location';
-
+    Position position = await Geolocator.getCurrentPosition();
+    List<Placemark> placemarks =
+        await placemarkFromCoordinates(position.latitude, position.longitude);
+    String address = placemarks.first.subLocality ?? 'Unknown location';
     updateLocation(address);
-  }
-
-  Future<bool> _showLocationDialog() async {
-    return await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Enable Location Services',style: TextStyle(fontSize: 14,fontWeight: FontWeight.bold),),
-          content: Text(
-              'Location services are required to show your current location. Please enable location services in your device settings.'),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop(false);
-              },
-            ),
-            // TextButton(
-            //   child: Text('Enable'),
-            //   onPressed: () {
-            //     Navigator.of(context).pop(true);
-            //   },
-            // ),
-          ],
-        );
-      },
-    ) ?? false;
   }
 
   void updateLocation(String location) {
